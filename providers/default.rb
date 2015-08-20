@@ -96,7 +96,12 @@ action :create do
   if !is_mounted?(device)
 
     # We use this check to test if a device's filesystem is already mountable.
-    generic_check_cmd = "mkdir -p /tmp/filesystemchecks/#{label}; mount #{device} /tmp/filesystemchecks/#{label} && umount /tmp/filesystemchecks/#{label}"
+#    generic_check_cmd = "mkdir -p /tmp/filesystemchecks/#{label}; mount #{device} /tmp/filesystemchecks/#{label} && umount /tmp/filesystemchecks/#{label}"
+    fs_type_check = "file -s #{device} | grep -i '\s#{fstype}\s' > /dev/null"
+
+#    puts "generic_check_cmd = #{generic_check_cmd}"
+    puts "fs_type_check = #{fs_type_check}"
+
 
     # Install the filesystem's default package and recipes as configured in default attributes.
     fs_tools = node[:filesystem_tools][fstype]
@@ -123,9 +128,9 @@ action :create do
 
     # We form our mkfs command
     mkfs_cmd = "mkfs -t #{fstype} #{force_option} #{mkfs_options} -L #{label} #{device}"
-  
+
     if force
- 
+
       # We create the filesystem without any checks, and we ignore failures. This is sparta, etc.
       # It should also be noted that forced behaviour is not default behaviour.
       execute mkfs_cmd do
@@ -137,10 +142,10 @@ action :create do
       # We create the filesystem, but only if the device does not already contain a mountable filesystem, and we have the tools.
       execute mkfs_cmd do
         only_if "which mkfs.#{fstype}"
-        not_if generic_check_cmd
+        not_if fs_type_check
       end
 
-    end 
+    end
 
   end
 
@@ -239,7 +244,7 @@ action :mount do
       group group if group
       mode mode if mode
     end
-    
+
     # Mount using the chef resource
     mount mount do
       device device
