@@ -96,12 +96,10 @@ action :create do
   if !is_mounted?(device)
 
     # We use this check to test if a device's filesystem is already mountable.
-#    generic_check_cmd = "mkdir -p /tmp/filesystemchecks/#{label}; mount #{device} /tmp/filesystemchecks/#{label} && umount /tmp/filesystemchecks/#{label}"
-    fs_type_check = "file -s #{device} | grep -i '\s#{fstype}\s' > /dev/null"
+    generic_check_cmd = "mkdir -p /tmp/filesystemchecks/#{label}; mount #{device} /tmp/filesystemchecks/#{label} && umount /tmp/filesystemchecks/#{label}"
 
-#    puts "generic_check_cmd = #{generic_check_cmd}"
-    puts "fs_type_check = #{fs_type_check}"
-
+    fs_type_check = "file -s #{device} | grep -i ' #{fstype} ' > /dev/null"
+    force = true if ! (system fs_type_check)
 
     # Install the filesystem's default package and recipes as configured in default attributes.
     fs_tools = node[:filesystem_tools][fstype]
@@ -142,7 +140,7 @@ action :create do
       # We create the filesystem, but only if the device does not already contain a mountable filesystem, and we have the tools.
       execute mkfs_cmd do
         only_if "which mkfs.#{fstype}"
-        not_if fs_type_check
+        not_if generic_check_cmd
       end
 
     end
